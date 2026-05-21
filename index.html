@@ -251,6 +251,22 @@
       font-family: var(--mono);
       font-size: 14px;
     }
+    .bank-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .bank-controls label {
+      margin: 0;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+    .bank-controls select {
+      min-width: 230px;
+      font-size: 13px;
+      padding: 6px 8px;
+    }
     .stat-item span {
       font-weight: 500;
       color: var(--accent);
@@ -261,6 +277,58 @@
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 24px;
+    }
+    .bank-subcontrols {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .manual-section-picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .manual-section-picker label {
+      margin: 0;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+    .manual-section-picker select {
+      min-width: 220px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    .result-window {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .pagination-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .pager-btn {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    .pager-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pager-state {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
     }
     .cat-tab {
       padding: 6px 12px;
@@ -560,6 +628,8 @@
       .setup-grid { grid-template-columns: 1fr; }
       .setup-grid .full-width { grid-column: span 1; }
       .bank-header { flex-direction: column; align-items: flex-start; gap: 12px; top: 54px; }
+      .bank-controls { width: 100%; }
+      .bank-controls select { width: 100%; min-width: 0; }
       
       .category-tabs { 
         flex-wrap: nowrap; 
@@ -567,6 +637,10 @@
         padding-bottom: 8px; 
         -webkit-overflow-scrolling: touch;
       }
+      .bank-subcontrols { flex-direction: column; align-items: flex-start; }
+      .manual-section-picker { width: 100%; }
+      .manual-section-picker select { width: 100%; min-width: 0; }
+      .pagination-row { justify-content: flex-start; width: 100%; }
       .cat-tab { flex: 0 0 auto; white-space: nowrap; }
       
       .rating-row { gap: 8px; justify-content: center; }
@@ -713,7 +787,15 @@
       <!-- VIEW 2: QUESTION BANK -->
       <section id="view-bank" class="view">
         <div class="bank-header">
-          <h2>Question Bank</h2>
+          <div>
+            <h2>Question Bank</h2>
+            <div class="bank-controls">
+              <label for="track-filter">Track Filter</label>
+              <select id="track-filter" onchange="setTrackFilter(this.value)">
+                <option value="all">ALL TRACKS</option>
+              </select>
+            </div>
+          </div>
           <div class="stats-bar">
             <div class="stat-item">Asked: <span id="stat-asked">0</span> / <span id="stat-total">0</span></div>
             <div class="stat-item">Avg: <span id="stat-avg">0.0</span> / 5</div>
@@ -721,6 +803,14 @@
         </div>
 
         <div class="category-tabs" id="category-tabs">
+          <!-- Rendered via JS -->
+        </div>
+
+        <div class="bank-subcontrols" id="bank-subcontrols">
+          <!-- Rendered via JS -->
+        </div>
+
+        <div class="pagination-row" id="pagination-row">
           <!-- Rendered via JS -->
         </div>
 
@@ -759,7 +849,7 @@
       <!-- VIEW 4: REPORT -->
       <section id="view-report" class="view">
         <div class="report-actions">
-          <button class="btn btn-outline" onclick="copyReportText()">Copy as Plain Text</button>
+          <button class="btn btn-outline" onclick="downloadScoreSummaryText()">Download Score Summary TXT</button>
           <button class="btn btn-outline" onclick="window.print()">Print / PDF</button>
           <button class="btn btn-outline" onclick="navTo('view-scorecard')">Back</button>
           <button class="btn btn-danger" style="margin-left: auto;" onclick="clearSession()">End & New Interview</button>
@@ -798,6 +888,10 @@
               <option value="behavioural">Behavioural</option>
               <option value="bluff">Bluff Detectors</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Primary Track</label>
+            <select id="custom-track"></select>
           </div>
           <div class="form-group">
             <label>Question Text</label>
@@ -843,6 +937,9 @@
     };
 
     let currentCategoryFilter = 'all';
+    let currentTrackFilter = 'all';
+    let currentPage = 1;
+    const QUESTIONS_PER_SECTION = 50;
     let chartInstance = null;
 
     const CATEGORIES = [
@@ -856,10 +953,67 @@
       { id: 'bluff', label: 'Bluff Detectors' }
     ];
 
+    const TRACK_LABELS = {
+      'manual-testing': 'Manual Testing',
+      'api-testing': 'API Testing',
+      'postman': 'Postman',
+      'jmeter': 'JMeter',
+      'sql-data': 'SQL & Data',
+      'automation': 'Automation',
+      'behavioural': 'Behavioural',
+      'bug-management': 'Bug Management',
+      'test-design': 'Test Design',
+      'process-quality': 'Process & Quality',
+      'mobile-web': 'Mobile/Web',
+      'tools-ci': 'Tools & CI'
+    };
+
+    function mapCategoryToTrack(category) {
+      if (category === 'api') return 'api-testing';
+      if (category === 'postman') return 'postman';
+      if (category === 'sql') return 'sql-data';
+      if (category === 'automation') return 'automation';
+      if (category === 'performance') return 'jmeter';
+      if (category === 'behavioural') return 'behavioural';
+      if (category === 'bluff') return 'tools-ci';
+      return 'manual-testing';
+    }
+
+    function getTrackLabel(trackId) {
+      return TRACK_LABELS[trackId] || trackId;
+    }
+
+    function enrichQuestionMetadata(q) {
+      if (!q.primaryTrack) {
+        q.primaryTrack = mapCategoryToTrack(q.category);
+      }
+      if (!Array.isArray(q.tags)) {
+        q.tags = [];
+      }
+      const tagSet = new Set(q.tags.filter(Boolean));
+      tagSet.add(q.category || 'manual');
+      tagSet.add(q.primaryTrack);
+      q.tags = Array.from(tagSet);
+      return q;
+    }
+
+    function getAvailableTracks() {
+      const counts = {};
+      appState.questions.forEach(q => {
+        if (!appState.settings.activeQuestions[q.id]) return;
+        const track = q.primaryTrack || mapCategoryToTrack(q.category);
+        counts[track] = (counts[track] || 0) + 1;
+      });
+      return Object.keys(counts)
+        .sort((a, b) => getTrackLabel(a).localeCompare(getTrackLabel(b)))
+        .map(track => ({ id: track, count: counts[track] }));
+    }
+
     // --- 2. INITIALIZATION ---
     async function init() {
       // Set default date
       document.getElementById('c-date').valueAsDate = new Date();
+      initCustomTrackSelect();
       
       // Load saved state from LocalStorage
       loadState();
@@ -875,6 +1029,7 @@
         let newQuestions = [];
         
         data.forEach(q => {
+          enrichQuestionMetadata(q);
           if (!existingIds.has(q.id)) {
             newQuestions.push(q);
             appState.settings.activeQuestions[q.id] = true;
@@ -882,6 +1037,7 @@
             // Update existing question data in case it was edited in json
             let existingQ = appState.questions.find(x => x.id === q.id);
             Object.assign(existingQ, q);
+            enrichQuestionMetadata(existingQ);
           }
         });
         
@@ -897,6 +1053,8 @@
           return;
         }
       }
+
+      appState.questions.forEach(enrichQuestionMetadata);
 
       populateSetupFields();
       updateSidebarProgress();
@@ -1014,9 +1172,27 @@
 
     // --- 6. BANK VIEW ---
     function renderBank() {
+      renderTrackFilter();
       renderTabs();
       renderQuestions();
       updateBankStats();
+    }
+
+    function renderTrackFilter() {
+      const select = document.getElementById('track-filter');
+      if (!select) return;
+
+      const tracks = getAvailableTracks();
+      let html = `<option value="all">ALL TRACKS</option>`;
+      tracks.forEach(track => {
+        html += `<option value="${track.id}">${getTrackLabel(track.id).toUpperCase()} (${track.count})</option>`;
+      });
+
+      select.innerHTML = html;
+      if (currentTrackFilter !== 'all' && !tracks.some(t => t.id === currentTrackFilter)) {
+        currentTrackFilter = 'all';
+      }
+      select.value = currentTrackFilter;
     }
 
     function renderTabs() {
@@ -1033,16 +1209,99 @@
 
     function setFilter(catId) {
       currentCategoryFilter = catId;
+      currentTrackFilter = 'all'; // Reset track filter when category changes
+      currentPage = 1;
       renderBank();
     }
 
-    function renderQuestions() {
-      const container = document.getElementById('question-list');
-      
+    function setTrackFilter(trackId) {
+      currentTrackFilter = trackId;
+      currentCategoryFilter = 'all'; // Reset category filter when track changes
+      currentPage = 1;
+      renderBank();
+    }
+
+    function getBaseFilteredQuestions() {
       let filtered = appState.questions.filter(q => appState.settings.activeQuestions[q.id]);
       if (currentCategoryFilter !== 'all') {
         filtered = filtered.filter(q => q.category === currentCategoryFilter);
       }
+      if (currentTrackFilter !== 'all') {
+        filtered = filtered.filter(q => (q.primaryTrack || mapCategoryToTrack(q.category)) === currentTrackFilter);
+      }
+      return filtered;
+    }
+
+    function setManualSection(sectionNum) {
+      currentPage = Number(sectionNum) || 1;
+      renderQuestions();
+    }
+
+    function goToPage(nextPage) {
+      currentPage = nextPage;
+      renderQuestions();
+    }
+
+    function renderBankSubcontrols(totalCount, startIndex, endIndex, totalPages) {
+      const container = document.getElementById('bank-subcontrols');
+      const pager = document.getElementById('pagination-row');
+      if (!container || !pager) return;
+
+      if (totalCount === 0) {
+        container.innerHTML = '';
+        pager.innerHTML = '';
+        return;
+      }
+
+      const hasMultipleSections = totalPages > 1;
+      let controlsHtml = `<div class="result-window">Showing ${startIndex}-${endIndex} of ${totalCount}</div>`;
+
+      if (currentCategoryFilter === 'manual' && hasMultipleSections) {
+        let optionsHtml = '';
+        for (let i = 1; i <= totalPages; i++) {
+          const start = ((i - 1) * QUESTIONS_PER_SECTION) + 1;
+          const end = Math.min(i * QUESTIONS_PER_SECTION, totalCount);
+          optionsHtml += `<option value="${i}" ${currentPage === i ? 'selected' : ''}>Section ${i} (${start}-${end})</option>`;
+        }
+
+        controlsHtml = `
+          <div class="manual-section-picker">
+            <label for="manual-section-select">Manual Section</label>
+            <select id="manual-section-select" onchange="setManualSection(this.value)">
+              ${optionsHtml}
+            </select>
+          </div>
+          <div class="result-window">Showing ${startIndex}-${endIndex} of ${totalCount}</div>
+        `;
+      }
+
+      container.innerHTML = controlsHtml;
+
+      if (!hasMultipleSections) {
+        pager.innerHTML = '';
+        return;
+      }
+
+      pager.innerHTML = `
+        <button class="pager-btn" onclick="goToPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>Prev</button>
+        <span class="pager-state">Page ${currentPage} / ${totalPages}</span>
+        <button class="pager-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
+      `;
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('question-list');
+
+      const filtered = getBaseFilteredQuestions();
+      const totalPages = Math.max(1, Math.ceil(filtered.length / QUESTIONS_PER_SECTION));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIndex = ((currentPage - 1) * QUESTIONS_PER_SECTION) + 1;
+      const endIndex = Math.min(currentPage * QUESTIONS_PER_SECTION, filtered.length);
+      const pagedQuestions = filtered.slice(startIndex - 1, endIndex);
+
+      renderBankSubcontrols(filtered.length, filtered.length ? startIndex : 0, filtered.length ? endIndex : 0, totalPages);
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="empty-state">No active questions in this category.</div>`;
@@ -1050,17 +1309,21 @@
       }
 
       let html = '';
-      filtered.forEach((q, index) => {
+      pagedQuestions.forEach((q, index) => {
         const isAsked = appState.session.asked[q.id];
         const score = appState.session.scores[q.id];
         const note = appState.session.notes[q.id] || '';
         const catLabel = CATEGORIES.find(c => c.id === q.category)?.label || q.category;
+        const trackLabel = getTrackLabel(q.primaryTrack || mapCategoryToTrack(q.category));
 
         html += `
           <div class="q-card ${isAsked ? 'asked' : ''}" id="card-${q.id}" tabindex="0" onkeydown="handleKey(event, '${q.id}')">
             <div class="q-meta">
               <span>${catLabel.toUpperCase()}</span>
-              <span class="badge">${q.difficulty}</span>
+              <span>
+                <span class="badge">${trackLabel}</span>
+                <span class="badge">${q.difficulty}</span>
+              </span>
             </div>
             <div class="q-text">${q.question}</div>
             
@@ -1409,76 +1672,98 @@
       generateReportHTML();
     }
 
-    function copyReportText() {
+    function getTrackStats() {
+      const stats = {};
+      Object.keys(appState.session.asked).forEach(id => {
+        const q = appState.questions.find(x => x.id === id);
+        if (!q) return;
+        const track = q.primaryTrack || mapCategoryToTrack(q.category);
+        if (!stats[track]) {
+          stats[track] = { asked: 0, totalScore: 0, ratedCount: 0 };
+        }
+        stats[track].asked++;
+        if (appState.session.scores[id]) {
+          stats[track].totalScore += appState.session.scores[id];
+          stats[track].ratedCount++;
+        }
+      });
+      return stats;
+    }
+
+    function buildScoreSummaryText() {
       const c = appState.candidate;
-      const stats = getCategoryStats();
-      let totalPts = 0, totalPoss = 0, totalAsked = 0;
-      
-      let text = `=======================================================\n`;
-      text += `QA ENGINEER INTERVIEW ASSESSMENT REPORT\n`;
-      text += `=======================================================\n`;
-      text += `Candidate:    ${c.name}\n`;
-      text += `Position:     ${c.pos}\n`;
-      text += `Experience:   ${c.exp} years\n`;
-      text += `Date:         ${c.date}\n`;
-      text += `Interviewer:  ${c.interviewer}\n`;
-      text += `Round:        ${c.round}\n`;
-      text += `-------------------------------------------------------\n`;
-      text += `SCORE SUMMARY\n`;
-      text += `-------------------------------------------------------\n`;
-      text += `Category             | Asked | Avg Score | Rating\n`;
-      text += `---------------------|-------|-----------|--------\n`;
+      const catStats = getCategoryStats();
+      const trackStats = getTrackStats();
+      let totalPts = 0;
+      let totalPoss = 0;
 
-      let obsText = '';
       CATEGORIES.forEach(cat => {
-        const s = stats[cat.id];
-        const avg = s.ratedCount > 0 ? (s.totalScore / s.ratedCount) : 0;
-        if(s.asked > 0) {
-          totalPts += s.totalScore;
-          totalPoss += (s.ratedCount * 5);
-          totalAsked += s.asked;
-          
-          text += `${cat.label.padEnd(20)} | ${String(s.asked + '/' + s.activeCount).padEnd(5)} | ${avg.toFixed(1).padEnd(9)} | ${getRatingWord(avg)}\n`;
-          if (s.ratedCount > 0) {
-            obsText += `${getSummaryLine(cat.label, avg)}\n`;
-          }
-        }
+        const s = catStats[cat.id];
+        totalPts += s.totalScore;
+        totalPoss += (s.ratedCount * 5);
       });
-      
+
       const overallPct = totalPoss > 0 ? Math.round((totalPts / totalPoss) * 100) : 0;
-      const v = getVerdict(overallPct);
-      const verdictShort = v.text.split('—')[0].trim().toUpperCase();
+      const verdict = getVerdict(overallPct).text;
 
-      text += `-------------------------------------------------------\n`;
-      text += `OVERALL:             | ${String(totalAsked).padEnd(5)} | ${String(overallPct+'%').padEnd(9)} | ${verdictShort}\n`;
-      text += `-------------------------------------------------------\n\n`;
-
-      text += `CATEGORY OBSERVATIONS\n`;
-      text += `${obsText}\n`;
-
-      text += `QUESTION DETAIL\n`;
-      appState.questions.forEach(q => {
-        if (appState.session.asked[q.id]) {
-          const score = appState.session.scores[q.id] || 'N/A';
-          text += `- Q: ${q.question}\n  Score: ${score}\n`;
-          if(appState.session.notes[q.id]) {
-            text += `  Note: ${appState.session.notes[q.id]}\n`;
-          }
-          text += `\n`;
-        }
+      const categorySummary = CATEGORIES.map(cat => {
+        const s = catStats[cat.id];
+        const avg = s.ratedCount > 0 ? Number((s.totalScore / s.ratedCount).toFixed(2)) : 0;
+        return {
+          categoryId: cat.id,
+          categoryLabel: cat.label,
+          asked: s.asked,
+          active: s.activeCount,
+          average: avg
+        };
       });
 
-      text += `OVERALL NOTES\n`;
-      text += `${appState.session.overallNote || 'None'}\n\n`;
-
-      text += `FINAL RECOMMENDATION\n`;
-      text += `[${v.text.toUpperCase()}]\n`;
-      text += `Interviewed by: ${c.interviewer} on ${c.date}\n`;
-      text += `=======================================================\n`;
-
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("Report copied to clipboard!");
+      const trackSummary = Object.keys(trackStats).sort().map(trackId => {
+        const s = trackStats[trackId];
+        const avg = s.ratedCount > 0 ? Number((s.totalScore / s.ratedCount).toFixed(2)) : 0;
+        return {
+          trackId,
+          trackLabel: getTrackLabel(trackId),
+          asked: s.asked,
+          average: avg
+        };
       });
+
+      const payload = {
+        candidate: {
+          name: c.name || '',
+          position: c.pos || '',
+          experienceYears: c.exp || '',
+          date: c.date || '',
+          interviewer: c.interviewer || '',
+          round: c.round || ''
+        },
+        summary: {
+          overallPercent: overallPct,
+          totalPoints: totalPts,
+          maxPoints: totalPoss,
+          verdict
+        },
+        byCategory: categorySummary,
+        byTrack: trackSummary
+      };
+
+      return JSON.stringify(payload, null, 2);
+    }
+
+    function downloadScoreSummaryText() {
+      const text = buildScoreSummaryText();
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const safeName = (appState.candidate.name || 'candidate').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+      const fileName = `score_summary_${safeName || 'candidate'}.txt`;
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Score summary TXT downloaded');
     }
 
     // --- 9. SETTINGS ---
@@ -1517,6 +1802,7 @@
 
     function addCustomQuestion() {
       const cat = document.getElementById('custom-cat').value;
+      const track = document.getElementById('custom-track').value || mapCategoryToTrack(cat);
       const q = document.getElementById('custom-q').value;
       const ans = document.getElementById('custom-ans').value;
       const green = document.getElementById('custom-green').value;
@@ -1526,7 +1812,17 @@
 
       const id = 'cq_' + Date.now();
       appState.questions.push({
-        id, category: cat, difficulty: 'Medium', question: q, answerGuide: ans, greenFlag: green, redFlag: red, followUp: '', custom: true
+        id,
+        category: cat,
+        difficulty: 'Medium',
+        question: q,
+        answerGuide: ans,
+        greenFlag: green,
+        redFlag: red,
+        followUp: '',
+        custom: true,
+        primaryTrack: track,
+        tags: [cat, track]
       });
       appState.settings.activeQuestions[id] = true;
       saveState();
@@ -1556,7 +1852,7 @@
         try {
           const contents = JSON.parse(e.target.result);
           if (Array.isArray(contents)) {
-            appState.questions = contents;
+            appState.questions = contents.map(enrichQuestionMetadata);
             contents.forEach(q => {
               if (appState.settings.activeQuestions[q.id] === undefined) {
                 appState.settings.activeQuestions[q.id] = true;
@@ -1571,6 +1867,13 @@
         }
       };
       reader.readAsText(file);
+    }
+
+    function initCustomTrackSelect() {
+      const select = document.getElementById('custom-track');
+      if (!select) return;
+      const keys = Object.keys(TRACK_LABELS).sort((a, b) => TRACK_LABELS[a].localeCompare(TRACK_LABELS[b]));
+      select.innerHTML = keys.map(k => `<option value="${k}">${TRACK_LABELS[k]}</option>`).join('');
     }
 
     // --- INIT APP ---
