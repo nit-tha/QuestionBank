@@ -593,6 +593,97 @@
       padding: 30px;
       margin-bottom: 24px;
     }
+    .settings-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .settings-toolbar input,
+    .settings-toolbar select {
+      max-width: 280px;
+      min-width: 180px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .settings-toolbar .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    .settings-stats {
+      display: flex;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .settings-q-list {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      padding: 10px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+    .settings-category-block {
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+    .settings-category-title {
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .settings-q-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .settings-q-item:last-child {
+      border-bottom: none;
+    }
+    .settings-q-label {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-weight: normal;
+      text-transform: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      margin: 0;
+    }
+    .settings-q-meta {
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+    .settings-delete {
+      color: var(--danger);
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 12px;
+      padding-top: 2px;
+    }
+    .settings-lock {
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding-top: 2px;
+    }
     
     /* MOBILE NAV */
     .mobile-nav-toggle {
@@ -869,7 +960,17 @@
           <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
             Select which questions are active in the question bank.
           </p>
-          <div id="settings-q-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; margin-bottom: 20px;">
+          <div class="settings-toolbar">
+            <input type="text" id="settings-search" placeholder="Search questions..." oninput="setSettingsSearch(this.value)">
+            <select id="settings-cat-filter" onchange="setSettingsCategoryFilter(this.value)">
+              <option value="all">All Categories</option>
+            </select>
+            <button class="btn btn-outline" onclick="toggleSettingsCustomOnly()" id="settings-custom-toggle">Custom Only: Off</button>
+            <button class="btn btn-outline" onclick="setAllVisibleQuestionsActive(true)">Enable Visible</button>
+            <button class="btn btn-outline" onclick="setAllVisibleQuestionsActive(false)">Disable Visible</button>
+          </div>
+          <div class="settings-stats" id="settings-stats"></div>
+          <div id="settings-q-list" class="settings-q-list">
             <!-- Rendered via JS -->
           </div>
         </div>
@@ -878,16 +979,7 @@
           <h3>Add Custom Question</h3>
           <div class="form-group">
             <label>Category</label>
-            <select id="custom-cat">
-              <option value="manual">Manual Testing</option>
-              <option value="api">API Testing</option>
-              <option value="postman">Postman</option>
-              <option value="sql">SQL & Data</option>
-              <option value="automation">Automation</option>
-              <option value="performance">Performance</option>
-              <option value="behavioural">Behavioural</option>
-              <option value="bluff">Bluff Detectors</option>
-            </select>
+            <select id="custom-cat"></select>
           </div>
           <div class="form-group">
             <label>Primary Track</label>
@@ -939,18 +1031,22 @@
     let currentCategoryFilter = 'all';
     let currentTrackFilter = 'all';
     let currentPage = 1;
+    let settingsSearchTerm = '';
+    let settingsCategoryFilter = 'all';
+    let settingsCustomOnly = false;
     const QUESTIONS_PER_SECTION = 50;
     let chartInstance = null;
 
     const CATEGORIES = [
-      { id: 'manual', label: 'Manual Testing' },
       { id: 'api', label: 'API Testing' },
-      { id: 'postman', label: 'Postman' },
-      { id: 'sql', label: 'SQL & Data' },
       { id: 'automation', label: 'Automation' },
-      { id: 'performance', label: 'Performance' },
       { id: 'behavioural', label: 'Behavioural' },
-      { id: 'bluff', label: 'Bluff Detectors' }
+      { id: 'bluff', label: 'Bluff Detectors' },
+      { id: 'manual', label: 'Manual Testing' },
+      { id: 'performance', label: 'Performance' },
+      { id: 'postman', label: 'Postman' },
+      { id: 'practical', label: 'Practical Testing' },
+      { id: 'sql', label: 'SQL & Data' }
     ];
 
     const TRACK_LABELS = {
@@ -960,6 +1056,7 @@
       'jmeter': 'JMeter',
       'sql-data': 'SQL & Data',
       'automation': 'Automation',
+      'practical-testing': 'Practical Testing',
       'behavioural': 'Behavioural',
       'bug-management': 'Bug Management',
       'test-design': 'Test Design',
@@ -974,9 +1071,14 @@
       if (category === 'sql') return 'sql-data';
       if (category === 'automation') return 'automation';
       if (category === 'performance') return 'jmeter';
+      if (category === 'practical') return 'practical-testing';
       if (category === 'behavioural') return 'behavioural';
       if (category === 'bluff') return 'tools-ci';
       return 'manual-testing';
+    }
+
+    function getSortedCategories() {
+      return [...CATEGORIES].sort((a, b) => a.label.localeCompare(b.label));
     }
 
     function getTrackLabel(trackId) {
@@ -1013,6 +1115,7 @@
     async function init() {
       // Set default date
       document.getElementById('c-date').valueAsDate = new Date();
+      initCustomCategorySelect();
       initCustomTrackSelect();
       
       // Load saved state from LocalStorage
@@ -1199,7 +1302,7 @@
       const tabsContainer = document.getElementById('category-tabs');
       let html = `<div class="cat-tab ${currentCategoryFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">ALL</div>`;
       
-      CATEGORIES.forEach(cat => {
+      getSortedCategories().forEach(cat => {
         // Count active questions in category
         const count = appState.questions.filter(q => q.category === cat.id && appState.settings.activeQuestions[q.id]).length;
         html += `<div class="cat-tab ${currentCategoryFilter === cat.id ? 'active' : ''}" onclick="setFilter('${cat.id}')">${cat.label.toUpperCase()} (${count})</div>`;
@@ -1768,21 +1871,118 @@
 
     // --- 9. SETTINGS ---
     function renderSettings() {
+      renderSettingsCategoryFilter();
       const list = document.getElementById('settings-q-list');
-      let html = '';
-      appState.questions.forEach(q => {
-        const active = appState.settings.activeQuestions[q.id];
-        html += `
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; border-bottom:1px solid var(--border); padding-bottom:4px;">
-            <label style="flex:1; display:flex; align-items:center; gap:8px; font-weight:normal; text-transform:none; color:var(--text-primary);">
-              <input type="checkbox" ${active ? 'checked' : ''} onchange="toggleQActive('${q.id}', this.checked)">
-              [${q.category}] ${q.question.substring(0, 50)}...
-            </label>
-            ${q.custom ? `<span style="color:var(--danger); cursor:pointer;" onclick="deleteQ('${q.id}')">Delete</span>` : '🔒'}
-          </div>
-        `;
+      const stats = document.getElementById('settings-stats');
+      const toggleBtn = document.getElementById('settings-custom-toggle');
+
+      const visible = getSettingsFilteredQuestions();
+      const visibleActive = visible.filter(q => appState.settings.activeQuestions[q.id]).length;
+      toggleBtn.innerText = `Custom Only: ${settingsCustomOnly ? 'On' : 'Off'}`;
+      stats.innerHTML = `
+        <span>Visible: ${visible.length}</span>
+        <span>Active: ${visibleActive}</span>
+        <span>Total Questions: ${appState.questions.length}</span>
+      `;
+
+      if (!visible.length) {
+        list.innerHTML = `<div class="empty-state">No questions match current filters.</div>`;
+        return;
+      }
+
+      const groups = {};
+      visible.forEach(q => {
+        const key = q.category || 'uncategorized';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(q);
       });
+
+      const sortedCategories = Object.keys(groups).sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b)));
+      let html = '';
+      sortedCategories.forEach(catId => {
+        const items = groups[catId].sort((a, b) => String(a.question).localeCompare(String(b.question)));
+        html += `<div class="settings-category-block">`;
+        html += `<div class="settings-category-title">${getCategoryLabel(catId)} (${items.length})</div>`;
+        items.forEach(q => {
+          const active = appState.settings.activeQuestions[q.id];
+          const track = getTrackLabel(q.primaryTrack || mapCategoryToTrack(q.category));
+          html += `
+            <div class="settings-q-item">
+              <label class="settings-q-label">
+                <input type="checkbox" ${active ? 'checked' : ''} onchange="toggleQActive('${q.id}', this.checked)">
+                <span>
+                  <div>${q.question}</div>
+                  <div class="settings-q-meta">${q.id} • ${track}</div>
+                </span>
+              </label>
+              ${q.custom ? `<span class="settings-delete" onclick="deleteQ('${q.id}')">Delete</span>` : `<span class="settings-lock">Locked</span>`}
+            </div>
+          `;
+        });
+        html += `</div>`;
+      });
+
       list.innerHTML = html;
+    }
+
+    function getCategoryLabel(catId) {
+      return CATEGORIES.find(c => c.id === catId)?.label || catId;
+    }
+
+    function renderSettingsCategoryFilter() {
+      const select = document.getElementById('settings-cat-filter');
+      if (!select) return;
+
+      const ids = Array.from(new Set(appState.questions.map(q => q.category).filter(Boolean)))
+        .sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b)));
+
+      let html = `<option value="all">All Categories</option>`;
+      ids.forEach(id => {
+        html += `<option value="${id}">${getCategoryLabel(id)}</option>`;
+      });
+
+      select.innerHTML = html;
+      if (settingsCategoryFilter !== 'all' && !ids.includes(settingsCategoryFilter)) {
+        settingsCategoryFilter = 'all';
+      }
+      select.value = settingsCategoryFilter;
+    }
+
+    function getSettingsFilteredQuestions() {
+      return appState.questions.filter(q => {
+        if (settingsCategoryFilter !== 'all' && q.category !== settingsCategoryFilter) return false;
+        if (settingsCustomOnly && !q.custom) return false;
+        if (settingsSearchTerm) {
+          const haystack = `${q.question || ''} ${q.id || ''} ${q.category || ''}`.toLowerCase();
+          if (!haystack.includes(settingsSearchTerm)) return false;
+        }
+        return true;
+      });
+    }
+
+    function setSettingsSearch(value) {
+      settingsSearchTerm = (value || '').trim().toLowerCase();
+      renderSettings();
+    }
+
+    function setSettingsCategoryFilter(value) {
+      settingsCategoryFilter = value || 'all';
+      renderSettings();
+    }
+
+    function toggleSettingsCustomOnly() {
+      settingsCustomOnly = !settingsCustomOnly;
+      renderSettings();
+    }
+
+    function setAllVisibleQuestionsActive(state) {
+      const visible = getSettingsFilteredQuestions();
+      visible.forEach(q => {
+        appState.settings.activeQuestions[q.id] = state;
+      });
+      saveState();
+      renderSettings();
+      showToast(`${state ? 'Enabled' : 'Disabled'} ${visible.length} visible question(s)`);
     }
 
     function toggleQActive(id, state) {
@@ -1874,6 +2074,15 @@
       if (!select) return;
       const keys = Object.keys(TRACK_LABELS).sort((a, b) => TRACK_LABELS[a].localeCompare(TRACK_LABELS[b]));
       select.innerHTML = keys.map(k => `<option value="${k}">${TRACK_LABELS[k]}</option>`).join('');
+    }
+
+    function initCustomCategorySelect() {
+      const select = document.getElementById('custom-cat');
+      if (!select) return;
+      const sortedCategories = getSortedCategories();
+      select.innerHTML = sortedCategories
+        .map(cat => `<option value="${cat.id}">${cat.label}</option>`)
+        .join('');
     }
 
     // --- INIT APP ---
