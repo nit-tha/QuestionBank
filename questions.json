@@ -5358,5 +5358,515 @@
       "performance-testing",
       "sql"
     ]
+  },
+  {
+    "id": "q306",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "A tester says API response is wrong, but developer says backend data is correct. How do you verify?",
+    "answerGuide": "I validate the API response against database records using SQL queries. I compare request parameters, API payload, DB values, and business logic mapping to identify whether issue is in API transformation or database data.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q307",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "Production issue occurs but cannot be reproduced in QA. What steps will you take?",
+    "answerGuide": "I compare production and QA environments including configs, feature flags, DB data, cache, load balancer behavior, timezone, and third-party integrations. I also review logs and reproduce using production-like data.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q308",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test APIs where response changes dynamically every time?",
+    "answerGuide": "I validate schema, mandatory fields, status codes, response structure, data types, and business rules instead of exact values. Dynamic fields like timestamps or IDs are excluded from strict validation.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q309",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you verify pagination in APIs or UI?",
+    "answerGuide": "I check page size, total record count, duplicate/missing records across pages, sorting consistency, boundary pages, and performance for large datasets.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q310",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "During testing, application works in UI but DB data is incorrect. What kind of issue is this?",
+    "answerGuide": "It is a data integrity or backend processing issue. UI validation alone is insufficient, so DB verification is required especially in finance, healthcare, or reporting systems.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q311",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test retry mechanisms in APIs?",
+    "answerGuide": "I simulate failures like timeout or 500 errors and verify retry count, retry intervals, duplicate prevention, logging, and whether transaction consistency is maintained.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q312",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate cron jobs or scheduled jobs?",
+    "answerGuide": "I verify job execution time, logs, DB updates, generated files/reports, failure handling, and rerun behavior using scheduler logs and timestamps.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q313",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "What SQL queries do testers commonly use?",
+    "answerGuide": "SELECT with JOIN, GROUP BY, ORDER BY, COUNT, DISTINCT, aggregate functions, duplicate detection, null validation, and data comparison queries.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q314",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you find duplicate records in database testing?",
+    "answerGuide": "Using queries like: `SELECT column_name, COUNT(*) FROM table GROUP BY column_name HAVING COUNT(*) > 1;`",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q315",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test report generation functionality?",
+    "answerGuide": "I validate report filters, data accuracy against DB, export formats, timezone correctness, totals/counts, pagination, and performance for large datasets.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q316",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate logs during issue investigation?",
+    "answerGuide": "I correlate timestamps, request IDs, session IDs, API traces, and exception logs across application, server, and DB logs.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q317",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test file processing systems?",
+    "answerGuide": "I validate valid/invalid files, encoding issues, partial processing, duplicate files, malformed records, rollback handling, and error reporting.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q318",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "What challenges do testers face in microservices architecture?",
+    "answerGuide": "Tracing failures across services, dependency availability, async communication issues, environment setup complexity, and log correlation.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q319",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test asynchronous APIs?",
+    "answerGuide": "I validate acknowledgment responses first, then verify eventual processing using polling, callbacks, DB updates, or queue monitoring.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q320",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate message queue systems like Kafka or RabbitMQ?",
+    "answerGuide": "I verify message production, consumption, retry behavior, dead-letter queues, duplicate handling, and message ordering.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q321",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test cache-related functionality?",
+    "answerGuide": "I validate cache refresh, stale data handling, cache invalidation after updates, and differences between cached vs actual DB values.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q322",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you identify performance bottlenecks?",
+    "answerGuide": "By monitoring API response time, DB query execution, CPU/memory usage, thread count, network latency, and slow logs during load testing.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q323",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do testers verify database performance issues?",
+    "answerGuide": "Using execution plans, query timing, indexing checks, deadlock analysis, and validating high-load scenarios.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q324",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test large data imports?",
+    "answerGuide": "I validate processing time, partial failures, memory usage, duplicate handling, invalid records, rollback logic, and final DB consistency.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q325",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate timezone-related defects?",
+    "answerGuide": "I compare DB timestamps, UI display, API values, UTC conversion, server timezone, and daylight saving behavior.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q326",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you handle flaky automation test cases?",
+    "answerGuide": "I identify unstable locators, synchronization problems, shared test data issues, dependency failures, and timing issues using retries and logging.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q327",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate authentication tokens in APIs?",
+    "answerGuide": "I test expired tokens, invalid signatures, tampered tokens, role-based access, refresh token behavior, and unauthorized access attempts.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q328",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "What real issue occurs frequently in pagination APIs?",
+    "answerGuide": "Duplicate or skipped records when data changes dynamically during pagination due to unstable sorting or offset handling.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q329",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test concurrent user scenarios?",
+    "answerGuide": "Using load tools to simulate multiple users performing same operation simultaneously and validating locking, duplicate prevention, and consistency.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q330",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do testers validate ETL or data migration projects?",
+    "answerGuide": "By comparing source vs target counts, schema validation, null checks, transformation accuracy, duplicate validation, and reconciliation reports.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q331",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test APIs with rate limiting?",
+    "answerGuide": "I send requests beyond threshold and verify HTTP 429 responses, retry-after headers, throttling behavior, and recovery timing.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q332",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "What practical issues occur in mobile app testing?",
+    "answerGuide": "App crashes during network switch, background/foreground transitions, battery optimization issues, notification failures, and device fragmentation.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q333",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you validate search functionality with millions of records?",
+    "answerGuide": "I validate indexing behavior, partial matching, filtering accuracy, response time, ranking relevance, and performance under load.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q334",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "How do you test rollback functionality after failed transactions?",
+    "answerGuide": "I intentionally trigger failures during transaction processing and verify no partial DB updates remain committed.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q335",
+    "category": "practical",
+    "difficulty": "Medium",
+    "question": "What is the most common real-world issue testers face?",
+    "answerGuide": "Environment instability — services down, expired certificates, incorrect configs, inaccessible databases, or inconsistent test data affecting testing.",
+    "greenFlag": "Gives a practical, step-by-step validation approach with clear checks and evidence.",
+    "redFlag": "Provides generic advice without concrete verification steps or misses key risk checks.",
+    "followUp": "Can you share a real example where you handled this in a project?",
+    "custom": false,
+    "primaryTrack": "Practical Testing",
+    "tags": [
+      "practical",
+      "practical-testing",
+      "medium"
+    ]
   }
 ]
