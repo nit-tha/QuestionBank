@@ -116,12 +116,25 @@
               <select id="track-filter" onchange="setTrackFilter(this.value)">
                 <option value="all">ALL TRACKS</option>
               </select>
+              <label for="exp-filter">Experience</label>
+              <select id="exp-filter" onchange="setExperienceFilter(this.value)">
+                <option value="all">ALL LEVELS</option>
+                <option value="3">3 Years</option>
+                <option value="4">4 Years</option>
+                <option value="5">5 Years</option>
+                <option value="5+">5+ Years</option>
+              </select>
             </div>
           </div>
           <div class="stats-bar">
             <div class="stat-item">Asked: <span id="stat-asked">0</span> / <span id="stat-total">0</span></div>
             <div class="stat-item">Avg: <span id="stat-avg">0.0</span> / 5</div>
           </div>
+        </div>
+
+        <div class="bank-search-row">
+          <input type="text" id="bank-search" class="bank-search-input" placeholder="🔍 Search questions across all sections (question, answer, tags)..." oninput="setBankSearch(this.value)">
+          <span class="bank-search-clear" id="bank-search-clear" onclick="clearBankSearch()">✕ Clear</span>
         </div>
 
         <div class="category-tabs" id="category-tabs">
