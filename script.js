@@ -8,11 +8,15 @@ let appState = {
 
 let currentCategoryFilter = 'all';
 let currentTrackFilter = 'all';
+let currentExperienceFilter = 'all';
+let currentSearchTerm = '';
 let currentPage = 1;
 let settingsSearchTerm = '';
 let settingsCategoryFilter = 'all';
 let settingsCustomOnly = false;
+let generalPoolIds = null;
 const QUESTIONS_PER_SECTION = 50;
+const GENERAL_POOL_SIZE = 15;
 let chartInstance = null;
 
 const CATEGORIES = [
@@ -22,10 +26,36 @@ const CATEGORIES = [
   { id: 'bluff', label: 'Bluff Detectors' },
   { id: 'manual', label: 'Manual Testing' },
   { id: 'performance', label: 'Performance' },
+  { id: 'playwright', label: 'Playwright' },
   { id: 'postman', label: 'Postman' },
   { id: 'practical', label: 'Practical Testing' },
+  { id: 'selenium', label: 'Selenium' },
   { id: 'sql', label: 'SQL & Data' }
 ];
+
+// Experience-level filter is derived from question difficulty (no data migration needed):
+// junior interviews lean on Easy questions, senior interviews lean on Hard ones.
+const EXPERIENCE_DIFFICULTY_MAP = {
+  '3': ['Easy'],
+  '4': ['Easy', 'Medium'],
+  '5': ['Medium', 'Hard'],
+  '5+': ['Hard']
+};
+
+function questionMatchesExperience(q, level) {
+  if (!level || level === 'all') return true;
+  const allowed = EXPERIENCE_DIFFICULTY_MAP[level];
+  return allowed ? allowed.includes(q.difficulty) : true;
+}
+
+function questionMatchesSearch(q, term) {
+  const haystack = `${q.question || ''} ${q.answerGuide || ''} ${q.category || ''} ${q.primaryTrack || ''} ${(q.tags || []).join(' ')}`.toLowerCase();
+  return haystack.includes(term);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
 
 const TRACK_LABELS = {
   'manual-testing': 'Manual Testing',
@@ -245,9 +275,16 @@ function saveSetupAndStart() {
 // --- 6. BANK VIEW ---
 function renderBank() {
   renderTrackFilter();
+  renderExperienceFilter();
   renderTabs();
   renderQuestions();
   updateBankStats();
+}
+
+function renderExperienceFilter() {
+  const select = document.getElementById('exp-filter');
+  if (!select) return;
+  select.value = currentExperienceFilter;
 }
 
 function renderTrackFilter() {
@@ -270,6 +307,7 @@ function renderTrackFilter() {
 function renderTabs() {
   const tabsContainer = document.getElementById('category-tabs');
   let html = `<div class="cat-tab ${currentCategoryFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">ALL</div>`;
+  html += `<div class="cat-tab general-tab ${currentCategoryFilter === 'general' ? 'active' : ''}" onclick="setFilter('general')">🎲 GENERAL (BASICS)</div>`;
 
   getSortedCategories().forEach(cat => {
     const count = appState.questions.filter(q => q.category === cat.id && appState.settings.activeQuestions[q.id]).length;
@@ -282,6 +320,9 @@ function setFilter(catId) {
   currentCategoryFilter = catId;
   currentTrackFilter = 'all';
   currentPage = 1;
+  if (catId === 'general') {
+    buildGeneralPool();
+  }
   renderBank();
 }
 
@@ -292,13 +333,80 @@ function setTrackFilter(trackId) {
   renderBank();
 }
 
+function setExperienceFilter(level) {
+  currentExperienceFilter = level || 'all';
+  currentPage = 1;
+  if (currentCategoryFilter === 'general') {
+    buildGeneralPool();
+  }
+  renderBank();
+}
+
+function buildGeneralPool() {
+  let pool = appState.questions.filter(q => appState.settings.activeQuestions[q.id] && q.difficulty === 'Easy');
+  if (currentExperienceFilter !== 'all') {
+    pool = pool.filter(q => questionMatchesExperience(q, currentExperienceFilter));
+  }
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  generalPoolIds = pool.slice(0, GENERAL_POOL_SIZE).map(q => q.id);
+}
+
+function shuffleGeneralPool() {
+  buildGeneralPool();
+  currentPage = 1;
+  renderQuestions();
+  showToast('Shuffled general questions');
+}
+
+function setBankSearch(value) {
+  currentSearchTerm = (value || '').trim().toLowerCase();
+  currentPage = 1;
+  renderQuestions();
+  const clearBtn = document.getElementById('bank-search-clear');
+  if (clearBtn) clearBtn.style.display = currentSearchTerm ? 'inline-flex' : 'none';
+}
+
+function clearBankSearch() {
+  currentSearchTerm = '';
+  const input = document.getElementById('bank-search');
+  if (input) input.value = '';
+  const clearBtn = document.getElementById('bank-search-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  currentPage = 1;
+  renderQuestions();
+}
+
 function getBaseFilteredQuestions() {
   let filtered = appState.questions.filter(q => appState.settings.activeQuestions[q.id]);
+
+  // A live search term looks across every category/track ("all sections"), bypassing tab/track filters.
+  if (currentSearchTerm) {
+    filtered = filtered.filter(q => questionMatchesSearch(q, currentSearchTerm));
+    if (currentExperienceFilter !== 'all') {
+      filtered = filtered.filter(q => questionMatchesExperience(q, currentExperienceFilter));
+    }
+    return filtered;
+  }
+
+  if (currentCategoryFilter === 'general') {
+    const pool = generalPoolIds || [];
+    const idSet = new Set(pool);
+    filtered = filtered.filter(q => idSet.has(q.id));
+    filtered.sort((a, b) => pool.indexOf(a.id) - pool.indexOf(b.id));
+    return filtered;
+  }
+
   if (currentCategoryFilter !== 'all') {
     filtered = filtered.filter(q => q.category === currentCategoryFilter);
   }
   if (currentTrackFilter !== 'all') {
     filtered = filtered.filter(q => (q.primaryTrack || mapCategoryToTrack(q.category)) === currentTrackFilter);
+  }
+  if (currentExperienceFilter !== 'all') {
+    filtered = filtered.filter(q => questionMatchesExperience(q, currentExperienceFilter));
   }
   return filtered;
 }
@@ -318,6 +426,18 @@ function renderBankSubcontrols(totalCount, startIndex, endIndex, totalPages) {
   const pager = document.getElementById('pagination-row');
   if (!container || !pager) return;
 
+  if (currentSearchTerm) {
+    container.innerHTML = totalCount
+      ? `<div class="result-window">Search "${escapeHtml(currentSearchTerm)}" — ${totalCount} match(es) across all sections</div>`
+      : `<div class="result-window">Search "${escapeHtml(currentSearchTerm)}" — no matches across all sections</div>`;
+    pager.innerHTML = totalCount && totalPages > 1 ? `
+      <button class="pager-btn" onclick="goToPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>Prev</button>
+      <span class="pager-state">Page ${currentPage} / ${totalPages}</span>
+      <button class="pager-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
+    ` : '';
+    return;
+  }
+
   if (totalCount === 0) {
     container.innerHTML = '';
     pager.innerHTML = '';
@@ -326,6 +446,13 @@ function renderBankSubcontrols(totalCount, startIndex, endIndex, totalPages) {
 
   const hasMultipleSections = totalPages > 1;
   let controlsHtml = `<div class="result-window">Showing ${startIndex}-${endIndex} of ${totalCount}</div>`;
+
+  if (currentCategoryFilter === 'general') {
+    controlsHtml = `
+      <div class="result-window">🎲 Random basic (Easy) questions — ${totalCount} in this pool</div>
+      <button class="btn btn-outline general-shuffle-btn" onclick="shuffleGeneralPool()">🔀 Shuffle Questions</button>
+    `;
+  }
 
   if (currentCategoryFilter === 'manual' && hasMultipleSections) {
     let optionsHtml = '';
@@ -375,7 +502,10 @@ function renderQuestions() {
   renderBankSubcontrols(filtered.length, filtered.length ? startIndex : 0, filtered.length ? endIndex : 0, totalPages);
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state">No active questions in this category.</div>';
+    const msg = currentSearchTerm
+      ? `No questions match "${escapeHtml(currentSearchTerm)}" in any section.`
+      : 'No active questions in this category.';
+    container.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
   }
 
