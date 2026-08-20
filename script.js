@@ -111,6 +111,8 @@ function getAvailableTracks() {
   const counts = {};
   appState.questions.forEach(q => {
     if (!appState.settings.activeQuestions[q.id]) return;
+    if (currentCategoryFilter !== 'all' && currentCategoryFilter !== 'general' && q.category !== currentCategoryFilter) return;
+    if (currentExperienceFilter !== 'all' && !questionMatchesExperience(q, currentExperienceFilter)) return;
     const track = q.primaryTrack || mapCategoryToTrack(q.category);
     counts[track] = (counts[track] || 0) + 1;
   });
@@ -122,6 +124,7 @@ function getAvailableTracks() {
 // --- 2. INITIALIZATION ---
 async function init() {
   document.getElementById('c-date').valueAsDate = new Date();
+  initSidebarCollapse();
   initCustomCategorySelect();
   initCustomTrackSelect();
 
@@ -223,6 +226,18 @@ function toggleMobileNav() {
   document.getElementById('sidebar').classList.toggle('open');
 }
 
+function toggleSidebarCollapse() {
+  const container = document.getElementById('app-container');
+  const collapsed = container.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('qa_sidebar_collapsed', collapsed ? '1' : '0');
+}
+
+function initSidebarCollapse() {
+  if (localStorage.getItem('qa_sidebar_collapsed') === '1') {
+    document.getElementById('app-container').classList.add('sidebar-collapsed');
+  }
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.innerText = msg;
@@ -304,13 +319,28 @@ function renderTrackFilter() {
   select.value = currentTrackFilter;
 }
 
+function getTabCountPool() {
+  // Counts shown on the category pills respect the track + experience filters (but not the category itself),
+  // so switching "Experience" updates every pill's count to what that tab would actually show.
+  let pool = appState.questions.filter(q => appState.settings.activeQuestions[q.id]);
+  if (currentTrackFilter !== 'all') {
+    pool = pool.filter(q => (q.primaryTrack || mapCategoryToTrack(q.category)) === currentTrackFilter);
+  }
+  if (currentExperienceFilter !== 'all') {
+    pool = pool.filter(q => questionMatchesExperience(q, currentExperienceFilter));
+  }
+  return pool;
+}
+
 function renderTabs() {
   const tabsContainer = document.getElementById('category-tabs');
-  let html = `<div class="cat-tab ${currentCategoryFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">ALL</div>`;
+  const pool = getTabCountPool();
+
+  let html = `<div class="cat-tab ${currentCategoryFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">ALL (${pool.length})</div>`;
   html += `<div class="cat-tab general-tab ${currentCategoryFilter === 'general' ? 'active' : ''}" onclick="setFilter('general')">🎲 GENERAL (BASICS)</div>`;
 
   getSortedCategories().forEach(cat => {
-    const count = appState.questions.filter(q => q.category === cat.id && appState.settings.activeQuestions[q.id]).length;
+    const count = pool.filter(q => q.category === cat.id).length;
     html += `<div class="cat-tab ${currentCategoryFilter === cat.id ? 'active' : ''}" onclick="setFilter('${cat.id}')">${cat.label.toUpperCase()} (${count})</div>`;
   });
   tabsContainer.innerHTML = html;
