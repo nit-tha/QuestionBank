@@ -46,7 +46,8 @@ body {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: transform 0.3s ease;
+  overflow: hidden;
+  transition: width 0.25s ease, transform 0.3s ease;
 }
 
 .sidebar-header {
@@ -54,17 +55,87 @@ body {
   background-color: var(--bg-panel);
   border-bottom: 1px solid #2d313f;
 }
+.sidebar-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
 .sidebar-header h1 {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 4px;
+  white-space: nowrap;
 }
 .sidebar-header p {
   font-size: 12px;
   color: #9CA3AF;
   font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.sidebar-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid #2d313f;
+  border-radius: 6px;
+  color: #9CA3AF;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-toggle-btn:hover {
+  background-color: var(--bg-panel);
+  color: var(--text-light);
+}
+
+.sidebar-expand-btn {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 150;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: background 0.2s;
+}
+.sidebar-expand-btn:hover {
+  background-color: var(--bg-main);
+}
+
+/* Desktop-only collapse behavior; mobile keeps its own hamburger/overlay nav. */
+@media (min-width: 769px) {
+  .sidebar-toggle-btn { display: inline-flex; }
+
+  .app-container.sidebar-collapsed .sidebar {
+    width: 0;
+    border: none;
+  }
+  .app-container.sidebar-collapsed .sidebar-header,
+  .app-container.sidebar-collapsed .nav-menu,
+  .app-container.sidebar-collapsed .candidate-summary {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .app-container.sidebar-collapsed .sidebar-expand-btn {
+    display: flex;
+  }
 }
 
 .nav-menu {
@@ -222,8 +293,10 @@ input:focus, select:focus, textarea:focus {
 /* VIEW 2: QUESTION BANK */
 .bank-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 24px;
   background: var(--bg-card);
   padding: 16px 24px;
@@ -235,12 +308,14 @@ input:focus, select:focus, textarea:focus {
 .stats-bar {
   display: flex;
   gap: 24px;
+  flex-shrink: 0;
   font-family: var(--mono);
   font-size: 14px;
 }
 .bank-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
 }
@@ -248,11 +323,15 @@ input:focus, select:focus, textarea:focus {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.4px;
+  white-space: nowrap;
 }
 .bank-controls select {
-  min-width: 230px;
+  min-width: 180px;
   font-size: 13px;
   padding: 6px 8px;
+}
+.stat-item {
+  white-space: nowrap;
 }
 .stat-item span {
   font-weight: 500;
