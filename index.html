@@ -18,15 +18,23 @@
     ☰ Menu — QA Assessment Tool
   </div>
 
-  <div class="app-container">
-    
+  <div class="app-container" id="app-container">
+
+    <!-- SIDEBAR EXPAND HANDLE (visible only while sidebar is collapsed) -->
+    <button class="sidebar-expand-btn" id="sidebar-expand-btn" onclick="toggleSidebarCollapse()" title="Expand sidebar" aria-label="Expand sidebar">»</button>
+
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <h1>QA Assessor</h1>
-        <p>Interview Tool</p>
+        <div class="sidebar-header-top">
+          <div>
+            <h1>QA Assessor</h1>
+            <p>Interview Tool</p>
+          </div>
+          <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar" aria-label="Collapse sidebar">«</button>
+        </div>
       </div>
-      
+
       <nav class="nav-menu">
         <div class="nav-item active" onclick="navTo('view-setup')" id="nav-setup">
           <span>1. Setup</span>
