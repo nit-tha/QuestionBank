@@ -30,7 +30,8 @@ const CATEGORIES = [
   { id: 'postman', label: 'Postman' },
   { id: 'practical', label: 'Practical Testing' },
   { id: 'selenium', label: 'Selenium' },
-  { id: 'sql', label: 'SQL & Data' }
+  { id: 'sql', label: 'SQL & Data' },
+  { id: 'trap', label: 'Trap Questions' }
 ];
 
 // Experience-level filter is derived from question difficulty (no data migration needed):
@@ -82,6 +83,7 @@ function mapCategoryToTrack(category) {
   if (category === 'practical') return 'practical-testing';
   if (category === 'behavioural') return 'behavioural';
   if (category === 'bluff') return 'tools-ci';
+  if (category === 'trap') return 'process-quality';
   return 'manual-testing';
 }
 
