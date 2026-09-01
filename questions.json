@@ -6503,5 +6503,455 @@
       "waits",
       "flaky-tests"
     ]
+  },
+  {
+    "id": "q376",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "Our API always returns HTTP 200 even on validation failure, with the actual error only in the response body. How do you configure your test framework to fail automatically on any 4xx/5xx status from this API?",
+    "answerGuide": "There's a flawed premise here: since the API never returns 4xx/5xx by design, a status-code assertion would never catch anything. The correct approach is asserting on the response body's error field or code instead of the HTTP status.",
+    "greenFlag": "Points out the API never returns 4xx/5xx, so a status-code check is pointless, and pivots to asserting on the body's error field.",
+    "redFlag": "Launches straight into framework config for catching 4xx/5xx without noticing the API never sends them.",
+    "followUp": "How would you design the assertion so it fails clearly with a useful error message?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "api",
+      "status-code",
+      "medium"
+    ]
+  },
+  {
+    "id": "q377",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "Since our automated suite has 100% code coverage and all tests pass, we can skip manual and exploratory testing before this release, right?",
+    "answerGuide": "No — coverage only measures which lines executed, not correctness. It says nothing about missing requirements, wrong assumptions baked into the tests themselves, or UX and edge cases nobody wrote a test for.",
+    "greenFlag": "Explains coverage isn't correctness and gives a concrete example of what it misses.",
+    "redFlag": "Agrees that 100% coverage means it's safe to skip further testing.",
+    "followUp": "Can you think of a case where 100% coverage still shipped a bug?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "process",
+      "coverage",
+      "easy"
+    ]
+  },
+  {
+    "id": "q378",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "To speed up regression, we should delete every test case that hasn't failed in its last 50 runs, since it clearly isn't finding bugs.",
+    "answerGuide": "Flawed logic — a test that never fails may be protecting a critical path that simply hasn't regressed yet. Test value should be judged by risk coverage, not by failure history.",
+    "greenFlag": "Pushes back on ‘never failed = useless’ and reframes the decision around risk coverage.",
+    "redFlag": "Agrees and describes pruning tests purely by failure count.",
+    "followUp": "What would you look at instead to decide which tests are worth keeping?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "automation",
+      "test-strategy",
+      "medium"
+    ]
+  },
+  {
+    "id": "q379",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "Since SELECT DISTINCT removes duplicate rows from a query result, running a SELECT DISTINCT query against the production table permanently fixes the duplicate records in it.",
+    "answerGuide": "SELECT DISTINCT only changes the result set of that one query — it never modifies the underlying table. Actually deduping rows needs something like ROW_NUMBER() with a scoped DELETE, done carefully with a backup.",
+    "greenFlag": "Immediately says SELECT is read-only and doesn't change the table, and proposes a ROW_NUMBER()/DELETE approach.",
+    "redFlag": "Explains SELECT DISTINCT syntax as if it fixes the underlying data.",
+    "followUp": "Walk me through the exact query you'd use to actually remove the duplicates.",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "sql",
+      "database",
+      "easy"
+    ]
+  },
+  {
+    "id": "q380",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "A load test with 1 virtual user shows 50ms response time. Multiply that by 5000 to confirm the server can handle 5000 concurrent users.",
+    "answerGuide": "Response time doesn't scale linearly like that. Concurrency introduces queueing, connection-pool limits, and resource contention that only show up when you actually run the load — it can't be derived by multiplication.",
+    "greenFlag": "Rejects the multiplication logic and explains you must actually run a load test at that concurrency.",
+    "redFlag": "Does the math and confirms the server ‘can handle’ 5000 users.",
+    "followUp": "What metrics would you actually watch during a real 5000-user load test?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "performance",
+      "medium"
+    ]
+  },
+  {
+    "id": "q381",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "A tester logged zero bugs this entire sprint despite “thorough” testing — that's a clear sign they're underperforming, correct?",
+    "answerGuide": "Not necessarily. Bug count is a poor individual KPI — it can reflect a genuinely stable feature, or it can incentivize logging trivial noise just to hit a number. Judge coverage and risk areas tested instead.",
+    "greenFlag": "Challenges bug count as a KPI and explains the perverse incentive it creates.",
+    "redFlag": "Agrees zero bugs automatically means underperformance.",
+    "followUp": "What would you look at in their test evidence to judge whether the sprint was actually well tested?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "process",
+      "behavioural",
+      "easy"
+    ]
+  },
+  {
+    "id": "q382",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "Our automation suite is slow, so running it across multiple machines in parallel will make the flaky tests pass consistently.",
+    "answerGuide": "Parallelization doesn't fix flakiness — it can make it worse if tests share state or data. Flaky tests come from unstable locators, timing and synchronization, or shared test data, and need root-cause fixes, not more compute.",
+    "greenFlag": "Separates ‘speed’ from ‘flakiness’ and names real root causes of flaky tests.",
+    "redFlag": "Agrees parallel execution will resolve flakiness.",
+    "followUp": "How would you go about diagnosing which of those root causes is behind a specific flaky test?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "automation",
+      "flaky-tests",
+      "medium"
+    ]
+  },
+  {
+    "id": "q383",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "Our staging environment mirrors production exactly, so a bug that won't reproduce in staging can't be a real production bug — close it as “cannot reproduce.”",
+    "answerGuide": "No environment is ever a perfect mirror — data volume, third-party integrations, config, and traffic patterns always differ. “Cannot reproduce in staging” should trigger deeper prod log and data investigation, not closure.",
+    "greenFlag": "Questions the ‘exact mirror’ claim and describes investigating prod logs and data before closing.",
+    "redFlag": "Accepts the premise and closes the bug as cannot-reproduce.",
+    "followUp": "What specific data would you pull from production logs to investigate further?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "environments",
+      "production-issue",
+      "medium"
+    ]
+  },
+  {
+    "id": "q384",
+    "category": "trap",
+    "difficulty": "Hard",
+    "question": "For a POST API that creates a resource, sending the exact same request twice should always create two separate resources — is that the right behavior to test for?",
+    "answerGuide": "Depends entirely on whether the operation is meant to be idempotent. For something like payment creation, a duplicate request creating two charges would be a serious bug — you test against the API's actual contract, not a blanket assumption.",
+    "greenFlag": "Says it depends on the contract/idempotency requirement and gives an example like payments.",
+    "redFlag": "States duplicate resources are always correct or expected behavior.",
+    "followUp": "How would you design a test to verify idempotency for a payment-creation endpoint?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "api",
+      "idempotency",
+      "hard"
+    ]
+  },
+  {
+    "id": "q385",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "HTTPS already encrypts the connection, so we don't need to test for SQL injection or input validation on this endpoint.",
+    "answerGuide": "HTTPS only protects data in transit — it has nothing to do with how the application handles the data once received. SQL injection, XSS, and input-validation testing are still required regardless of TLS.",
+    "greenFlag": "Clearly separates transport security (HTTPS) from application-layer input handling.",
+    "redFlag": "Agrees HTTPS reduces the need for injection testing.",
+    "followUp": "What would your basic SQL injection test payloads look like for this endpoint?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "security",
+      "easy"
+    ]
+  },
+  {
+    "id": "q386",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "The cron job's log shows “Job completed successfully” every day, so we can trust the data it produced without checking the output.",
+    "answerGuide": "A ‘success’ log entry only reflects that execution finished, not that the output is correct. The actual DB rows or generated report still need to be verified against expected values.",
+    "greenFlag": "Distinguishes execution status from data correctness and insists on verifying actual output.",
+    "redFlag": "Accepts the log message as sufficient proof of correctness.",
+    "followUp": "What would you check in the database to confirm the job actually did the right thing?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "data-integrity",
+      "scheduled-jobs",
+      "medium"
+    ]
+  },
+  {
+    "id": "q387",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "After migration, source and target tables have the same row count, so the migration is correct.",
+    "answerGuide": "Matching counts can hide field-level corruption — nulls, wrong mappings, or a duplicate silently replacing a missing record can all still add up to the same total. Column-level reconciliation is still required.",
+    "greenFlag": "Explains that count-matching hides field-level issues and proposes column-level reconciliation or checksums.",
+    "redFlag": "Accepts matching row counts as proof of a correct migration.",
+    "followUp": "What kind of reconciliation query or checksum approach would you use to validate column-level accuracy?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "sql",
+      "data-migration",
+      "medium"
+    ]
+  },
+  {
+    "id": "q388",
+    "category": "trap",
+    "difficulty": "Hard",
+    "question": "JWT tokens are signed, so if a token is expired but the signature is still valid, the API should accept it since the signature proves it wasn't tampered with.",
+    "answerGuide": "Signature validity and expiration are separate checks. The exp claim must be enforced independently — accepting an expired-but-signed token is a security bug, not a clever optimization.",
+    "greenFlag": "Explicitly separates signature validity from expiry enforcement and calls out the security risk.",
+    "redFlag": "Agrees a valid signature should be enough to accept an expired token.",
+    "followUp": "What would you test to confirm the API properly rejects expired tokens even with a valid signature?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "security",
+      "api",
+      "authentication",
+      "hard"
+    ]
+  },
+  {
+    "id": "q389",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "A performance test run on your local laptop shows 20ms response time, so we can report that as the production SLA benchmark.",
+    "answerGuide": "Local or dev hardware, network, and data volume aren't representative of production. Performance numbers are only meaningful when captured in a prod-like environment under prod-like load.",
+    "greenFlag": "Rejects using local numbers for an SLA and explains why environment parity matters.",
+    "redFlag": "Agrees the local test result can be reported as the SLA.",
+    "followUp": "What would you need in place to run a performance test that's actually representative of production?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "performance",
+      "easy"
+    ]
+  },
+  {
+    "id": "q390",
+    "category": "trap",
+    "difficulty": "Hard",
+    "question": "We added retries to the payment API, so retries alone make failure handling safe for that endpoint.",
+    "answerGuide": "Retries without idempotency keys can cause duplicate charges. Retry logic is only safe when paired with idempotent request handling — retries by themselves are not a fix.",
+    "greenFlag": "Flags the duplicate-charge risk and explains retries need idempotency keys to be safe.",
+    "redFlag": "Agrees retries alone solve failure handling for payments.",
+    "followUp": "How would you test that a retried payment request doesn't result in a duplicate charge?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "api",
+      "payments",
+      "idempotency",
+      "hard"
+    ]
+  },
+  {
+    "id": "q391",
+    "category": "trap",
+    "difficulty": "Hard",
+    "question": "A Kafka consumer commits the offset immediately on receiving a message, before processing it, to increase throughput. Good pattern to recommend?",
+    "answerGuide": "No — committing before processing risks silently losing the message if processing fails afterward. The offset should be committed after successful processing, or the design should deliberately handle at-least-once semantics.",
+    "greenFlag": "Identifies the message-loss risk of committing before processing and recommends committing after successful processing.",
+    "redFlag": "Endorses the pattern because it ‘increases throughput.’",
+    "followUp": "How would you test that a consumer doesn't lose messages when processing fails mid-batch?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "messaging",
+      "kafka",
+      "hard"
+    ]
+  },
+  {
+    "id": "q392",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "Timezone bugs can be avoided entirely by always storing timestamps in the server's local timezone instead of UTC.",
+    "answerGuide": "The opposite is true — storing in local time is what causes DST and cross-region timezone bugs. Best practice is storing in UTC and converting to local only at display time.",
+    "greenFlag": "Corrects the premise and states UTC storage as the standard practice.",
+    "redFlag": "Agrees local-timezone storage avoids timezone bugs.",
+    "followUp": "How would you test that a DST transition doesn't cause a timestamp to display incorrectly?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "data-integrity",
+      "timezone",
+      "medium"
+    ]
+  },
+  {
+    "id": "q393",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "A feature flag was turned off in production after release, so the code behind it is effectively untested now and its test cases can be deleted.",
+    "answerGuide": "Turning a flag off doesn't remove the code path — it can be re-enabled later. Deleting the tests just means a future re-enable ships with zero regression coverage.",
+    "greenFlag": "Points out the code path still exists and argues against deleting the tests.",
+    "redFlag": "Agrees the tests are safe to delete since the flag is off.",
+    "followUp": "How would you keep that code path covered without it running in every regular test run?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "test-strategy",
+      "feature-flags",
+      "medium"
+    ]
+  },
+  {
+    "id": "q394",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "During migration testing, the target table's total count matches the source exactly, even though a few records show NULL where the source had a real value — that's acceptable since the counts matched.",
+    "answerGuide": "Not acceptable — same trap as row-count-only validation. A matching count doesn't mean the data is correct; NULLs replacing real values are a real data-loss bug that count checks alone will never surface.",
+    "greenFlag": "Flags the NULLs as a real data-loss defect regardless of the count matching.",
+    "redFlag": "Accepts it as fine because the totals line up.",
+    "followUp": "What query would you write to find every column where the target has NULL but the source didn't?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "sql",
+      "data-migration",
+      "medium"
+    ]
+  },
+  {
+    "id": "q395",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "Boundary value testing on an integer age field with a valid range of 18–60 means testing the values 18 and 60.",
+    "answerGuide": "That only covers the valid boundaries. Real boundary testing also covers the values just outside the range — 17 and 61 — and invalid types like negative numbers, decimals, or non-numeric input.",
+    "greenFlag": "Adds the just-outside-range values and invalid-type cases, not just the two valid endpoints.",
+    "redFlag": "Agrees testing only 18 and 60 is sufficient boundary coverage.",
+    "followUp": "What other invalid inputs would you add beyond 17 and 61?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "test-design",
+      "boundary-testing",
+      "easy"
+    ]
+  },
+  {
+    "id": "q396",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "The test environment's database was copied straight from production last night, so testing against it is fine since it's “just for testing,” not real use.",
+    "answerGuide": "Copying unmasked production data into a test environment is a privacy and compliance risk regardless of intent — PII must be anonymized or masked before it's usable for testing.",
+    "greenFlag": "Flags the PII/compliance risk immediately, regardless of the ‘just for testing’ framing.",
+    "redFlag": "Accepts it as fine since it's only used internally for testing.",
+    "followUp": "What would a data-masking approach look like for this environment?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "security",
+      "data-privacy",
+      "medium"
+    ]
+  },
+  {
+    "id": "q397",
+    "category": "trap",
+    "difficulty": "Hard",
+    "question": "The API's rate limiter returns HTTP 429 after the threshold is crossed — that alone proves it's correctly protecting the backend from overload.",
+    "answerGuide": "Returning 429 only proves the limiter triggers at all. It doesn't prove the backend actually stays within safe load, that legitimate burst traffic isn't wrongly blocked, or that the counter is race-condition-safe under real concurrency.",
+    "greenFlag": "Names at least one gap that a single 429 doesn't cover — concurrency safety or false-positive blocking of legitimate bursts.",
+    "redFlag": "Treats seeing a single 429 response as full proof the rate limiter works correctly.",
+    "followUp": "How would you test the limiter's behavior under truly concurrent requests near the threshold?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "performance",
+      "api",
+      "rate-limiting",
+      "hard"
+    ]
+  },
+  {
+    "id": "q398",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "Increasing thread count in a load test from 100 to 1000 always produces a proportionally more accurate measurement of server throughput.",
+    "answerGuide": "Past a certain point the load generator itself becomes the bottleneck — client CPU, network, OS limits — producing misleading numbers unless you confirm the load-generating machine isn't saturated too.",
+    "greenFlag": "Raises the load-generator-as-bottleneck issue and mentions monitoring the client machine too.",
+    "redFlag": "Assumes higher thread count is always a more accurate measurement.",
+    "followUp": "What would you monitor on the load-generating machine itself to know if it's the bottleneck?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "performance",
+      "load-testing",
+      "medium"
+    ]
+  },
+  {
+    "id": "q399",
+    "category": "trap",
+    "difficulty": "Easy",
+    "question": "A 6-hour nightly regression suite that passes fully gives the team confidence to deploy to production every morning with no further checks.",
+    "answerGuide": "Regression alone doesn't cover the specific change going out that day, environment-specific quirks, or anything exploratory testing would catch. A targeted smoke test post-deploy is still needed.",
+    "greenFlag": "Explains regression doesn't replace a targeted smoke test or exploratory check on the actual day's change.",
+    "redFlag": "Agrees a passing nightly regression is sufficient with no further checks.",
+    "followUp": "What would a good post-deploy smoke test cover that the regression suite wouldn't?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "process",
+      "regression",
+      "easy"
+    ]
+  },
+  {
+    "id": "q400",
+    "category": "trap",
+    "difficulty": "Medium",
+    "question": "For validating calculated financial values like interest amounts, comparing two floating-point numbers with == in an assertion is a reliable check.",
+    "answerGuide": "Floating-point equality is unreliable due to precision and rounding errors. Financial comparisons need tolerance-based (epsilon) comparison or decimal types, not exact ==.",
+    "greenFlag": "Flags floating-point precision issues and proposes epsilon or decimal-based comparison.",
+    "redFlag": "Confirms == is fine for comparing calculated financial values.",
+    "followUp": "What epsilon or tolerance would you choose for a financial comparison, and why?",
+    "custom": false,
+    "primaryTrack": "AI-Assist Detection",
+    "tags": [
+      "trap",
+      "automation",
+      "financial-testing",
+      "medium"
+    ]
   }
 ]
