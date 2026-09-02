@@ -1,6 +1,6 @@
 // --- 1. STATE ---
 let appState = {
-  candidate: { name: '', exp: '', pos: '', date: '', interviewer: '', round: 'Round 1' },
+  candidate: { name: '', exp: '', pos: '', date: '', interviewer: '', round: 'Round 1 - Technical' },
   questions: [],
   settings: { activeQuestions: {} },
   session: { scores: {}, notes: {}, asked: {}, overallNote: '' }
@@ -129,6 +129,9 @@ async function init() {
   initSidebarCollapse();
   initCustomCategorySelect();
   initCustomTrackSelect();
+  updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+  initScrollEffects();
+  initKeyboardShortcuts();
 
   loadState();
 
@@ -159,7 +162,7 @@ async function init() {
   } catch (err) {
     console.warn('Fetch blocked or failed. Using LocalStorage fallback.', err);
     if (appState.questions.length === 0) {
-      showToast('Error loading questions. Ensure you are running a local server.');
+      showToast('Error loading questions. Ensure you are running a local server.', 'error');
       document.getElementById('question-list').innerHTML = '<div class="empty-state">Error loading questions.json. If opening directly from file://, fetch might be blocked by CORS. Please run a local server or use GitHub Pages.</div>';
       return;
     }
@@ -194,12 +197,12 @@ function loadState() {
 
 function clearSession() {
   if (confirm('Are you sure you want to end this interview and start fresh? All current scores will be lost.')) {
-    appState.candidate = { name: '', exp: '', pos: '', date: new Date().toISOString().split('T')[0], interviewer: '', round: 'Round 1' };
+    appState.candidate = { name: '', exp: '', pos: '', date: new Date().toISOString().split('T')[0], interviewer: '', round: 'Round 1 - Technical' };
     appState.session = { scores: {}, notes: {}, asked: {}, overallNote: '' };
     saveState();
     populateSetupFields();
     navTo('view-setup');
-    showToast('Session cleared');
+    showToast('Session cleared', 'warn');
   }
 }
 
@@ -240,11 +243,68 @@ function initSidebarCollapse() {
   }
 }
 
-function showToast(msg) {
+function initScrollEffects() {
+  const main = document.getElementById('main-content');
+  const header = document.getElementById('view-bank')?.querySelector('.bank-header');
+  const backToTop = document.getElementById('back-to-top');
+  if (!main) return;
+  main.addEventListener('scroll', () => {
+    const scrolled = main.scrollTop > 20;
+    if (header) header.classList.toggle('scrolled', scrolled);
+    if (backToTop) backToTop.classList.toggle('show', main.scrollTop > 400);
+  });
+}
+
+function scrollMainToTop() {
+  const main = document.getElementById('main-content');
+  if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    const bankView = document.getElementById('view-bank');
+    if (!bankView || !bankView.classList.contains('active')) return;
+    e.preventDefault();
+    document.getElementById('bank-search')?.focus();
+  });
+}
+
+const TOAST_ICONS = { info: 'ℹ', success: '✓', error: '✕', warn: '⚠' };
+const TOAST_COLORS = { info: 'var(--accent-2)', success: 'var(--success)', error: 'var(--danger)', warn: 'var(--warning)' };
+let toastHideTimer = null;
+
+function showToast(msg, type) {
+  type = TOAST_ICONS[type] ? type : 'info';
   const t = document.getElementById('toast');
-  t.innerText = msg;
+  const iconEl = document.getElementById('toast-icon');
+  const msgEl = document.getElementById('toast-msg');
+  if (iconEl && msgEl) {
+    iconEl.textContent = TOAST_ICONS[type];
+    msgEl.textContent = msg;
+    t.style.borderLeftColor = TOAST_COLORS[type];
+  } else {
+    t.innerText = msg;
+  }
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// --- THEME ---
+function toggleTheme() {
+  const root = document.documentElement;
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('qa_theme', next);
+  updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('theme-toggle-icon');
+  if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
 }
 
 function updateSidebarProgress() {
@@ -256,6 +316,12 @@ function updateSidebarProgress() {
   const askedCount = Object.keys(session.asked).length;
   const activeCount = Object.values(appState.settings.activeQuestions).filter(Boolean).length;
   document.getElementById('sum-asked').innerText = `${askedCount}/${activeCount}`;
+
+  const progressFill = document.getElementById('sidebar-progress-fill');
+  if (progressFill) {
+    const pct = activeCount > 0 ? Math.min(100, Math.round((askedCount / activeCount) * 100)) : 0;
+    progressFill.style.width = `${pct}%`;
+  }
 
   const setupDone = candidate.name && candidate.pos;
   document.getElementById('nav-setup').classList.toggle('completed', setupDone);
@@ -277,16 +343,24 @@ function populateSetupFields() {
 }
 
 function saveSetupAndStart() {
+  const name = document.getElementById('c-name').value.trim();
+  const pos = document.getElementById('c-pos').value.trim();
+  if (!name || !pos) {
+    showToast('Candidate name and position are required', 'error');
+    document.getElementById(name ? 'c-pos' : 'c-name').focus();
+    return;
+  }
   appState.candidate = {
-    name: document.getElementById('c-name').value,
+    name,
     exp: document.getElementById('c-exp').value,
-    pos: document.getElementById('c-pos').value,
+    pos,
     date: document.getElementById('c-date').value,
     interviewer: document.getElementById('c-interviewer').value,
     round: document.getElementById('c-round').value
   };
   saveState();
   navTo('view-bank');
+  showToast(`Interview started for ${name}`, 'success');
 }
 
 // --- 6. BANK VIEW ---
@@ -555,7 +629,7 @@ function renderQuestions() {
           <span>${catLabel.toUpperCase()}</span>
           <span>
             <span class="badge">${trackLabel}</span>
-            <span class="badge">${q.difficulty}</span>
+            <span class="badge badge-${String(q.difficulty || '').toLowerCase()}">${q.difficulty}</span>
           </span>
         </div>
         <div class="q-text">${q.question}</div>
@@ -993,7 +1067,7 @@ function downloadScoreSummaryText() {
   a.download = fileName;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Score summary TXT downloaded');
+  showToast('Score summary TXT downloaded', 'success');
 }
 
 // --- 9. SETTINGS ---
@@ -1136,7 +1210,7 @@ function addCustomQuestion() {
   const red = document.getElementById('custom-red').value;
 
   if (!q) {
-    showToast('Question text is required');
+    showToast('Question text is required', 'error');
     return;
   }
 
@@ -1162,7 +1236,7 @@ function addCustomQuestion() {
   document.getElementById('custom-green').value = '';
   document.getElementById('custom-red').value = '';
 
-  showToast('Custom question added!');
+  showToast('Custom question added!', 'success');
   renderSettings();
 }
 
@@ -1190,10 +1264,10 @@ function importQuestions(e) {
         });
         saveState();
         renderSettings();
-        showToast('Questions imported successfully!');
+        showToast('Questions imported successfully!', 'success');
       }
     } catch (err) {
-      showToast('Invalid JSON file');
+      showToast('Invalid JSON file', 'error');
     }
   };
   reader.readAsText(file);
